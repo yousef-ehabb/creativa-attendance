@@ -1,0 +1,258 @@
+{
+  "schemaVersion": 1,
+  "runId": "20260902-011959-216",
+  "strategy": "merge",
+  "toolkitVersion": "2026.8.31",
+  "createdAt": "2026-09-02T01:19:59.934Z",
+  "backupDir": "D:\\Work\\Creativa\\creativa-attendance\\.ag-kit-backups\\20260902-011959-216",
+  "summary": {
+    "actions": 15,
+    "conflicts": 0,
+    "preserved": 41,
+    "unchanged": 206
+  },
+  "actions": [
+    {
+      "type": "update",
+      "file": "CHANGELOG.md",
+      "reason": "changed upstream and unchanged locally"
+    },
+    {
+      "type": "update",
+      "file": "DEPENDENCY_GRAPH.md",
+      "reason": "changed upstream and unchanged locally"
+    },
+    {
+      "type": "update",
+      "file": "VERSION",
+      "reason": "changed upstream and unchanged locally"
+    },
+    {
+      "type": "update",
+      "file": "manifest.json",
+      "reason": "changed upstream and unchanged locally"
+    },
+    {
+      "type": "update",
+      "file": "manifest.lock.json",
+      "reason": "changed upstream and unchanged locally"
+    },
+    {
+      "type": "update",
+      "file": "skills/app-builder/SKILL.md",
+      "reason": "changed upstream and unchanged locally"
+    },
+    {
+      "type": "update",
+      "file": "skills/app-builder/agent-coordination.md",
+      "reason": "changed upstream and unchanged locally"
+    },
+    {
+      "type": "update",
+      "file": "skills/app-builder/feature-building.md",
+      "reason": "changed upstream and unchanged locally"
+    },
+    {
+      "type": "update",
+      "file": "skills/app-builder/project-detection.md",
+      "reason": "changed upstream and unchanged locally"
+    },
+    {
+      "type": "update",
+      "file": "skills/app-builder/scaffolding.md",
+      "reason": "changed upstream and unchanged locally"
+    },
+    {
+      "type": "update",
+      "file": "skills/app-builder/tech-stack.md",
+      "reason": "changed upstream and unchanged locally"
+    },
+    {
+      "type": "update",
+      "file": "skills/app-builder/templates/express-api/TEMPLATE.md",
+      "reason": "changed upstream and unchanged locally"
+    },
+    {
+      "type": "update",
+      "file": "skills/app-builder/templates/nextjs-fullstack/TEMPLATE.md",
+      "reason": "changed upstream and unchanged locally"
+    },
+    {
+      "type": "update",
+      "file": "skills/app-builder/templates/nextjs-saas/TEMPLATE.md",
+      "reason": "changed upstream and unchanged locally"
+    },
+    {
+      "type": "update",
+      "file": "skills/app-builder/templates/nextjs-static/TEMPLATE.md",
+      "reason": "changed upstream and unchanged locally"
+    }
+  ],
+  "conflicts": [],
+  "preserved": [
+    {
+      "file": "skills/design-taste-frontend/SKILL.md",
+      "reason": "user-owned file"
+    },
+    {
+      "file": "skills/supabase-postgres-best-practices/CHANGELOG.md",
+      "reason": "user-owned file"
+    },
+    {
+      "file": "skills/supabase-postgres-best-practices/SKILL.md",
+      "reason": "user-owned file"
+    },
+    {
+      "file": "skills/supabase-postgres-best-practices/references/_contributing.md",
+      "reason": "user-owned file"
+    },
+    {
+      "file": "skills/supabase-postgres-best-practices/references/_sections.md",
+      "reason": "user-owned file"
+    },
+    {
+      "file": "skills/supabase-postgres-best-practices/references/_template.md",
+      "reason": "user-owned file"
+    },
+    {
+      "file": "skills/supabase-postgres-best-practices/references/advanced-full-text-search.md",
+      "reason": "user-owned file"
+    },
+    {
+      "file": "skills/supabase-postgres-best-practices/references/advanced-jsonb-indexing.md",
+      "reason": "user-owned file"
+    },
+    {
+      "file": "skills/supabase-postgres-best-practices/references/conn-idle-timeout.md",
+      "reason": "user-owned file"
+    },
+    {
+      "file": "skills/supabase-postgres-best-practices/references/conn-limits.md",
+      "reason": "user-owned file"
+    },
+    {
+      "file": "skills/supabase-postgres-best-practices/references/conn-pooling.md",
+      "reason": "user-owned file"
+    },
+    {
+      "file": "skills/supabase-postgres-best-practices/references/conn-prepared-statements.md",
+      "reason": "user-owned file"
+    },
+    {
+      "file": "skills/supabase-postgres-best-practices/references/data-batch-inserts.md",
+      "reason": "user-owned file"
+    },
+    {
+      "file": "skills/supabase-postgres-best-practices/references/data-n-plus-one.md",
+      "reason": "user-owned file"
+    },
+    {
+      "file": "skills/supabase-postgres-best-practices/references/data-pagination.md",
+      "reason": "user-owned file"
+    },
+    {
+      "file": "skills/supabase-postgres-best-practices/references/data-upsert.md",
+      "reason": "user-owned file"
+    },
+    {
+      "file": "skills/supabase-postgres-best-practices/references/lock-advisory.md",
+      "reason": "user-owned file"
+    },
+    {
+      "file": "skills/supabase-postgres-best-practices/references/lock-deadlock-prevention.md",
+      "reason": "user-owned file"
+    },
+    {
+      "file": "skills/supabase-postgres-best-practices/references/lock-short-transactions.md",
+      "reason": "user-owned file"
+    },
+    {
+      "file": "skills/supabase-postgres-best-practices/references/lock-skip-locked.md",
+      "reason": "user-owned file"
+    },
+    {
+      "file": "skills/supabase-postgres-best-practices/references/monitor-explain-analyze.md",
+      "reason": "user-owned file"
+    },
+    {
+      "file": "skills/supabase-postgres-best-practices/references/monitor-pg-stat-statements.md",
+      "reason": "user-owned file"
+    },
+    {
+      "file": "skills/supabase-postgres-best-practices/references/monitor-vacuum-analyze.md",
+      "reason": "user-owned file"
+    },
+    {
+      "file": "skills/supabase-postgres-best-practices/references/query-composite-indexes.md",
+      "reason": "user-owned file"
+    },
+    {
+      "file": "skills/supabase-postgres-best-practices/references/query-covering-indexes.md",
+      "reason": "user-owned file"
+    },
+    {
+      "file": "skills/supabase-postgres-best-practices/references/query-index-types.md",
+      "reason": "user-owned file"
+    },
+    {
+      "file": "skills/supabase-postgres-best-practices/references/query-missing-indexes.md",
+      "reason": "user-owned file"
+    },
+    {
+      "file": "skills/supabase-postgres-best-practices/references/query-partial-indexes.md",
+      "reason": "user-owned file"
+    },
+    {
+      "file": "skills/supabase-postgres-best-practices/references/schema-constraints.md",
+      "reason": "user-owned file"
+    },
+    {
+      "file": "skills/supabase-postgres-best-practices/references/schema-data-types.md",
+      "reason": "user-owned file"
+    },
+    {
+      "file": "skills/supabase-postgres-best-practices/references/schema-foreign-key-indexes.md",
+      "reason": "user-owned file"
+    },
+    {
+      "file": "skills/supabase-postgres-best-practices/references/schema-lowercase-identifiers.md",
+      "reason": "user-owned file"
+    },
+    {
+      "file": "skills/supabase-postgres-best-practices/references/schema-partitioning.md",
+      "reason": "user-owned file"
+    },
+    {
+      "file": "skills/supabase-postgres-best-practices/references/schema-primary-keys.md",
+      "reason": "user-owned file"
+    },
+    {
+      "file": "skills/supabase-postgres-best-practices/references/security-privileges.md",
+      "reason": "user-owned file"
+    },
+    {
+      "file": "skills/supabase-postgres-best-practices/references/security-rls-basics.md",
+      "reason": "user-owned file"
+    },
+    {
+      "file": "skills/supabase-postgres-best-practices/references/security-rls-performance.md",
+      "reason": "user-owned file"
+    },
+    {
+      "file": "skills/supabase/CHANGELOG.md",
+      "reason": "user-owned file"
+    },
+    {
+      "file": "skills/supabase/SKILL.md",
+      "reason": "user-owned file"
+    },
+    {
+      "file": "skills/supabase/assets/feedback-issue-template.md",
+      "reason": "user-owned file"
+    },
+    {
+      "file": "skills/supabase/references/skill-feedback.md",
+      "reason": "user-owned file"
+    }
+  ]
+}
