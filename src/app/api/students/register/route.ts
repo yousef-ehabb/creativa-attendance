@@ -17,9 +17,27 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { intent_token, qr_token, full_name, email, phone, national_id } = body;
 
-    if (!full_name || !email || !phone) {
+    const trimmedName = (full_name ?? '').trim();
+    if (!trimmedName || !email || !phone) {
       return NextResponse.json({ ok: false, error: 'Missing required fields' }, { status: 400 });
     }
+
+    // Enforce English-only full name
+    const englishNameRegex = /^[a-zA-Z\s.'-]+$/;
+    if (!englishNameRegex.test(trimmedName)) {
+      return NextResponse.json(
+        { ok: false, error: 'Full name must be entered in English letters only.' },
+        { status: 400 }
+      );
+    }
+    const nameWords = trimmedName.split(/\s+/);
+    if (nameWords.length < 2) {
+      return NextResponse.json(
+        { ok: false, error: 'Please enter at least your first and last name in English.' },
+        { status: 400 }
+      );
+    }
+
     if (!intent_token && !qr_token) {
       return NextResponse.json({ ok: false, error: 'No session token provided' }, { status: 400 });
     }
@@ -70,8 +88,8 @@ export async function POST(req: NextRequest) {
       const { data: newStudent, error: se } = await supabaseAdmin
         .from('att_students')
         .insert({
-          full_name: full_name.trim(),
-          full_name_en: processName(full_name),
+          full_name: trimmedName,
+          full_name_en: trimmedName,
           email: normalizedEmail,
           phone: phone.trim(),
           national_id: national_id?.trim() || null,
@@ -123,7 +141,7 @@ export async function POST(req: NextRequest) {
       data: {
         device_token: token,
         student_id: student.id,
-        student_name: full_name.trim(),
+        student_name: trimmedName,
         course_name: courseData?.name ?? '',
         session_number: session.session_number,
         already_checked_in: alreadyCheckedIn,

@@ -22,8 +22,19 @@ function RegisterForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.full_name.trim() || !form.email.trim() || !form.phone.trim()) {
+    const trimmedName = form.full_name.trim();
+    if (!trimmedName || !form.email.trim() || !form.phone.trim()) {
       setError('Please provide your full name, email address, and phone number.');
+      return;
+    }
+    const englishNameRegex = /^[a-zA-Z\s.'-]+$/;
+    if (!englishNameRegex.test(trimmedName)) {
+      setError('Please enter your full name in English letters only.');
+      return;
+    }
+    const words = trimmedName.split(/\s+/);
+    if (words.length < 2) {
+      setError('Please enter at least your first and last name in English (e.g. Ahmed Ali).');
       return;
     }
     setLoading(true);
@@ -92,9 +103,16 @@ function RegisterForm() {
 
                 <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-4.5">
                   <div>
-                    <label className="block text-xs font-bold text-[#222222] mb-1.5">
-                      Full Name (Arabic or English) <span className="text-[#ef4444]">*</span>
-                    </label>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-xs font-bold text-[#222222]">
+                        Full Name (English only) <span className="text-[#ef4444]">*</span>
+                      </label>
+                      {form.full_name && !/^[a-zA-Z\s.'-]*$/.test(form.full_name) && (
+                        <span className="text-[10px] font-semibold text-[#ef4444] flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3 inline" /> English letters only
+                        </span>
+                      )}
+                    </div>
                     <div className="relative">
                       <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9e9e9e]" />
                       <Input
@@ -103,9 +121,16 @@ function RegisterForm() {
                         onChange={set('full_name')}
                         placeholder="e.g. Ahmed Mahmoud Ali"
                         required
-                        className="pl-11"
+                        className={`pl-11 ${
+                          form.full_name && !/^[a-zA-Z\s.'-]*$/.test(form.full_name)
+                            ? 'border-[#ef4444] focus-visible:ring-[#ef4444]'
+                            : ''
+                        }`}
                       />
                     </div>
+                    <p className="text-[10px] text-[#9e9e9e] mt-1 font-medium">
+                      Official certificates and records will be issued using this English name.
+                    </p>
                   </div>
 
                   <div>
