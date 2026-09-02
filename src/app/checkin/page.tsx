@@ -171,7 +171,11 @@ function CheckinProcess() {
                     <Button
                       variant="primary"
                       className="w-full h-12 text-sm font-bold mb-3.5 shadow-lg"
-                      onClick={() => router.push(`/register?t=${encodeURIComponent(token)}`)}
+                      onClick={() => {
+                        localStorage.removeItem('creativa_device_token');
+                        localStorage.removeItem('creativa_student_id');
+                        router.replace(`/c?t=${encodeURIComponent(token)}`);
+                      }}
                     >
                       Complete Trainee Profile <ArrowRight className="w-4 h-4" />
                     </Button>

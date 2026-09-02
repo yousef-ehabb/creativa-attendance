@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 function RegisterForm() {
   const router = useRouter();
   const params = useSearchParams();
-  const t = params.get('t') ?? '';
+  const it = params.get('it') ?? '';
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [form, setForm] = useState({ full_name: '', email: '', phone: '', national_id: '' });
@@ -32,13 +32,18 @@ function RegisterForm() {
       const res = await fetch('/api/students/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ qr_token: t, ...form }),
+        body: JSON.stringify({ intent_token: it, ...form }),
       });
       const json = await res.json();
       if (json.ok) {
         localStorage.setItem('creativa_device_token', json.data.device_token);
         localStorage.setItem('creativa_student_id', json.data.student_id);
-        router.replace('/confirmed');
+        const confirmParams = new URLSearchParams({
+          course: json.data.course_name ?? '',
+          session: String(json.data.session_number ?? ''),
+          name: json.data.student_name ?? '',
+        });
+        router.replace(`/confirmed?${confirmParams.toString()}`);
       } else {
         setError(json.error ?? 'Registration could not be completed.');
       }

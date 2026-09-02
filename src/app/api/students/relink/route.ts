@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
-import { issueDeviceToken } from '@/lib/device-token';
+import { issueDeviceToken, hashDeviceToken } from '@/lib/device-token';
 
 export async function POST(req: NextRequest) {
   try {
@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
     // Query student matching email AND phone for security
     const { data: student, error } = await supabaseAdmin
       .from('att_students')
-      .select('id, full_name, email, phone, device_token')
+      .select('id, full_name, email, phone')
       .eq('email', cleanEmail)
       .eq('phone', cleanPhone)
       .single();
@@ -30,14 +30,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    let token = student.device_token;
-    if (!token) {
-      token = issueDeviceToken(student.id);
-      await supabaseAdmin
-        .from('att_students')
-        .update({ device_token: token })
-        .eq('id', student.id);
-    }
+    // Always issue a fresh device token and store its hash
+    const token = await issueDeviceToken(student.id);
+    const tokenHash = hashDeviceToken(token);
+    await supabaseAdmin
+      .from('att_students')
+      .update({ device_token_hash: tokenHash })
+      .eq('id', student.id);
 
     return NextResponse.json({
       ok: true,
@@ -48,6 +47,7 @@ export async function POST(req: NextRequest) {
       },
     });
   } catch (err: any) {
-    return NextResponse.json({ ok: false, error: err.message }, { status: 500 });
+    console.error('[relink]', err);
+    return NextResponse.json({ ok: false, error: 'Server error' }, { status: 500 });
   }
 }

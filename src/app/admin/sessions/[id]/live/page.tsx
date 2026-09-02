@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -40,7 +40,8 @@ export default function LiveSessionPage() {
     }
   };
 
-  const fetchInitialData = async () => {
+  // Fetch attendees from server-side API (uses supabaseAdmin, bypasses RLS)
+  const fetchAttendees = useCallback(async () => {
     try {
       const res = await fetch(`/api/sessions/${sessionId}/attendance`);
       const json = await res.json();
@@ -51,10 +52,11 @@ export default function LiveSessionPage() {
     } catch (e) {
       console.error('Attendance fetch error', e);
     }
-  };
+  }, [sessionId]);
 
+  // Initial data load + QR rotation timer
   useEffect(() => {
-    fetchInitialData();
+    fetchAttendees();
     fetchQr();
 
     const qrInterval = setInterval(fetchQr, 28000);
@@ -66,9 +68,9 @@ export default function LiveSessionPage() {
       clearInterval(qrInterval);
       clearInterval(secInterval);
     };
-  }, [sessionId]);
+  }, [sessionId, fetchAttendees]);
 
-  // Supabase Realtime subscription
+  // Supabase Realtime subscription — refetch from server API on new attendance
   useEffect(() => {
     const supabase = createSupabaseBrowser();
     const channel = supabase
@@ -81,21 +83,10 @@ export default function LiveSessionPage() {
           table: 'att_attendance',
           filter: `session_id=eq.${sessionId}`,
         },
-        async (payload) => {
-          const { data: st } = await supabase
-            .from('att_students')
-            .select('full_name')
-            .eq('id', payload.new.student_id)
-            .single();
-
-          const newAttendee: Attendee = {
-            id: payload.new.id,
-            student_id: payload.new.student_id,
-            student_name: st?.full_name ?? 'New Trainee',
-            checked_in_at: payload.new.checked_in_at,
-            method: payload.new.check_in_method,
-          };
-          setAttendees((prev) => [newAttendee, ...prev.filter((a) => a.id !== newAttendee.id)]);
+        () => {
+          // Refetch full attendee list from server (includes student names)
+          // This avoids querying att_students directly from the browser client
+          fetchAttendees();
         }
       )
       .subscribe();
@@ -103,7 +94,7 @@ export default function LiveSessionPage() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [sessionId]);
+  }, [sessionId, fetchAttendees]);
 
   const handleClose = async () => {
     if (!confirm('Close this attendance session? The QR code will be deactivated.')) return;
@@ -141,7 +132,7 @@ export default function LiveSessionPage() {
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-base sm:text-lg font-bold text-[#222222] tracking-tight">
-                {session?.att_courses?.name ?? 'Live Classroom Session'}
+                {(session?.att_courses as any)?.name ?? 'Live Classroom Session'}
               </h1>
               <Badge variant="blue" className="text-[10px] px-2.5 py-0.5 font-mono">
                 Session #{session?.session_number}
