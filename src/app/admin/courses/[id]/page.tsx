@@ -1,6 +1,7 @@
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowLeft, Plus, Calendar } from 'lucide-react';
 import { SessionCard } from '@/components/admin/SessionCard';
 import { CourseActions } from '@/components/admin/CourseActions';
@@ -62,7 +63,11 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
 
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-[#e5e5e5]">
           <div>
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="text-[10px] font-bold text-[#004e9e] bg-[#e6eff8] px-2 py-0.5 rounded-full border border-[#bfdbfe] inline-flex items-center gap-1.5">
+                <Image src="/logo.png" alt="Creativa Hub" width={12} height={12} className="object-contain" />
+                Creativa Track
+              </span>
               <Badge
                 variant={
                   course.status === 'active'

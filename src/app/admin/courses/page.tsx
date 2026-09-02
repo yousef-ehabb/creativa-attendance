@@ -1,5 +1,6 @@
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Plus, Users, Calendar, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -25,10 +26,15 @@ export default async function AdminCoursesPage() {
     <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto selection:bg-[#004e9e] selection:text-white space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#e5e5e5]">
         <div>
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-2 mb-1.5">
             <Link href="/admin" className="text-xs font-semibold text-[#616161] hover:text-[#004e9e] transition-colors">
               &larr; Overview
             </Link>
+            <span className="text-xs text-[#9e9e9e]">&bull;</span>
+            <span className="text-[10px] font-bold text-[#004e9e] bg-[#e6eff8] px-2 py-0.5 rounded-full border border-[#bfdbfe] inline-flex items-center gap-1.5">
+              <Image src="/logo.png" alt="Creativa Hub" width={12} height={12} className="object-contain" />
+              Creativa Hub
+            </span>
           </div>
           <h1 className="text-xl sm:text-2xl font-bold text-[#222222] tracking-tight">
             Courses &amp; Training Tracks

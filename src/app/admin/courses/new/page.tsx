@@ -2,7 +2,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Loader2, BookOpen, Percent } from 'lucide-react';
+import Image from 'next/image';
+import { ArrowLeft, Loader2, Percent } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -57,11 +58,11 @@ export default function NewCoursePage() {
         <ArrowLeft className="w-3.5 h-3.5" /> Back to Courses
       </Link>
 
-      <Card className="border border-[#e5e5e5] bg-white">
+      <Card className="border border-[#e5e5e5] bg-white shadow-sm">
         <CardContent className="p-5 sm:p-6">
           <div className="flex items-center gap-3 mb-5">
-            <div className="w-10 h-10 rounded-xl bg-[#e6eff8] text-[#004e9e] flex items-center justify-center font-bold">
-              <BookOpen className="w-4 h-4" />
+            <div className="w-10 h-10 rounded-xl bg-white border border-[#e5e5e5] p-1.5 flex items-center justify-center shadow-xs">
+              <Image src="/logo.png" alt="Creativa Hub Logo" width={28} height={28} className="object-contain" priority />
             </div>
             <div>
               <h1 className="text-lg font-bold text-[#222222] tracking-tight">

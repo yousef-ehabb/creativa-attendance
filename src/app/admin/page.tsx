@@ -1,5 +1,6 @@
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Plus, BookOpen, Users, Calendar, ArrowRight, ShieldCheck, CheckCircle2, Sparkles } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -36,9 +37,10 @@ export default async function AdminDashboardPage() {
       {/* Dashboard Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#e5e5e5]">
         <div>
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-2 mb-1.5">
             <span className="text-[10px] font-bold uppercase tracking-wider text-[#004e9e] bg-[#e6eff8] px-2.5 py-0.5 rounded-full border border-[#bfdbfe] inline-flex items-center gap-1.5">
-              <Sparkles className="w-3 h-3 text-[#f8af43]" /> Creativa Aswan
+              <Image src="/logo.png" alt="Creativa Hub" width={12} height={12} className="object-contain" />
+              Creativa Hub Aswan
             </span>
           </div>
           <h1 className="text-xl sm:text-2xl font-bold text-[#222222] tracking-tight">
@@ -208,9 +210,9 @@ export default async function AdminDashboardPage() {
           })}
 
           {list.length === 0 && (
-            <div className="col-span-full p-8 text-center bg-white rounded-2xl border border-[#e5e5e5]">
-              <div className="w-10 h-10 rounded-full bg-[#fafafa] border border-[#e5e5e5] text-[#9e9e9e] flex items-center justify-center mx-auto mb-2">
-                <BookOpen className="w-5 h-5" />
+            <div className="col-span-full p-8 text-center bg-white rounded-2xl border border-[#e5e5e5] shadow-sm">
+              <div className="w-14 h-14 rounded-2xl bg-white border border-[#e5e5e5] p-2 flex items-center justify-center mx-auto mb-3 shadow-xs">
+                <Image src="/logo.png" alt="Creativa Hub Logo" width={38} height={38} className="object-contain" priority />
               </div>
               <h3 className="text-sm font-bold text-[#222222] mb-1">No Courses Created Yet</h3>
               <p className="text-xs text-[#616161] mb-4 max-w-sm mx-auto leading-relaxed">

@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useParams } from 'next/navigation';
+import Image from 'next/image';
 import { Loader2, Calculator, CheckCircle2, Lock, AlertTriangle, ArrowLeft, Download, FileSpreadsheet } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { EligibilitySnapshot } from '@/lib/types';
@@ -68,9 +69,9 @@ export default function FinalizePage() {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
         >
-          <Card className="border border-[#e5e5e5] bg-white text-center p-6 sm:p-8 my-4">
-            <div className="w-12 h-12 rounded-full bg-[#ecfdf5] border border-[#a7f3d0] text-[#047857] flex items-center justify-center mx-auto mb-3 shadow-xs">
-              <CheckCircle2 className="w-6 h-6" />
+          <Card className="border border-[#e5e5e5] bg-white text-center p-6 sm:p-8 my-4 shadow-sm">
+            <div className="w-14 h-14 rounded-2xl bg-white border border-[#e5e5e5] p-2 flex items-center justify-center mx-auto mb-3 shadow-xs">
+              <Image src="/logo.png" alt="Creativa Hub Logo" width={38} height={38} className="object-contain" priority />
             </div>
             <Badge variant="success" className="mb-2 text-[10px] px-2.5 py-0.5">Finalization Complete</Badge>
             <h1 className="text-xl font-bold text-[#222222] tracking-tight mb-1.5">
@@ -109,12 +110,19 @@ export default function FinalizePage() {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto selection:bg-[#004e9e] selection:text-white space-y-5">
-      <Link
-        href={`/admin/courses/${courseId}`}
-        className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#616161] hover:text-[#004e9e] transition-colors"
-      >
-        <ArrowLeft className="w-3.5 h-3.5" /> Back to Course
-      </Link>
+      <div className="flex items-center gap-2 mb-1">
+        <Link
+          href={`/admin/courses/${courseId}`}
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#616161] hover:text-[#004e9e] transition-colors"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" /> Back to Course
+        </Link>
+        <span className="text-xs text-[#9e9e9e]">&bull;</span>
+        <span className="text-[10px] font-bold text-[#004e9e] bg-[#e6eff8] px-2 py-0.5 rounded-full border border-[#bfdbfe] inline-flex items-center gap-1.5">
+          <Image src="/logo.png" alt="Creativa Hub" width={12} height={12} className="object-contain" />
+          Creativa Certification
+        </span>
+      </div>
 
       {/* 4-Step Progress Indicator */}
       <Card className="border border-[#e5e5e5] bg-white p-2">
@@ -157,11 +165,11 @@ export default function FinalizePage() {
 
       {/* Step 1: Calculate */}
       {(step === 'idle' || step === 'calculating') && (
-        <Card className="border border-[#e5e5e5] bg-white max-w-lg">
+        <Card className="border border-[#e5e5e5] bg-white max-w-lg shadow-sm">
           <CardContent className="p-5 sm:p-6">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-9 h-9 rounded-xl bg-[#e6eff8] text-[#004e9e] flex items-center justify-center">
-                <Calculator className="w-4 h-4" />
+              <div className="w-10 h-10 rounded-xl bg-white border border-[#e5e5e5] p-1.5 flex items-center justify-center shadow-xs">
+                <Image src="/logo.png" alt="Creativa Hub Logo" width={28} height={28} className="object-contain" priority />
               </div>
               <div>
                 <h2 className="text-base font-bold text-[#222222]">Step 1 &bull; Calculate Eligibility</h2>
