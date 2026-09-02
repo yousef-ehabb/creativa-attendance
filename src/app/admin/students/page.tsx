@@ -13,7 +13,7 @@ export default async function AdminStudentsPage() {
       email,
       phone,
       national_id,
-      device_token,
+      device_token_hash,
       created_at,
       att_enrollments (
         id,
@@ -30,6 +30,7 @@ export default async function AdminStudentsPage() {
 
   const list = (students ?? []).map((s: any) => ({
     ...s,
+    device_token: s.device_token_hash,
     courses: (s.att_enrollments ?? []).map((e: any) => e.att_courses).filter(Boolean),
   }));
 
