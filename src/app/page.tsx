@@ -3,8 +3,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Camera, ShieldCheck, KeyRound, ArrowRight, BookOpen, AlertCircle, Loader2, Smartphone, Sparkles, ZoomIn, ZoomOut } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Camera, ShieldCheck, KeyRound, ArrowRight, BookOpen, AlertCircle, Loader2, Smartphone, Sparkles, ZoomIn, ZoomOut, ChevronDown, ChevronUp, SlidersHorizontal } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -22,6 +22,7 @@ export default function StudentHomePage() {
   const [zoomLevel, setZoomLevel] = useState(1);
   const [zoomRange, setZoomRange] = useState({ min: 1, max: 3.5, step: 0.25 });
   const [isHardwareZoom, setIsHardwareZoom] = useState(false);
+  const [showZoomControls, setShowZoomControls] = useState(false);
   const scannerRef = useRef<any>(null);
   const touchStartDist = useRef<number | null>(null);
   const touchStartZoom = useRef<number>(1);
@@ -260,10 +261,14 @@ export default function StudentHomePage() {
 
                       {/* Floating Zoom Indicator Badge */}
                       {isScanning && zoomLevel > 1 && (
-                        <div className="absolute top-2.5 right-2.5 z-20 bg-black/70 backdrop-blur-md text-white text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border border-white/20 shadow-md flex items-center gap-1 pointer-events-none">
+                        <button
+                          type="button"
+                          onClick={() => setShowZoomControls(true)}
+                          className="absolute top-2.5 right-2.5 z-20 bg-black/70 backdrop-blur-md text-white text-[10px] font-mono font-bold px-2.5 py-1 rounded-full border border-white/20 shadow-md flex items-center gap-1 hover:bg-black/85 transition-colors cursor-pointer"
+                        >
                           <ZoomIn className="w-2.5 h-2.5 text-[#f8af43]" />
                           {zoomLevel.toFixed(1)}x
-                        </div>
+                        </button>
                       )}
 
                       {/* High-Tech Glowing Viewfinder Target */}
@@ -309,67 +314,114 @@ export default function StudentHomePage() {
                       )}
                     </div>
 
-                    {/* Camera Zoom Distance Controls */}
+                    {/* Camera Zoom Distance Controls (Hidden until student clicks) */}
                     {isScanning && (
-                      <div className="mt-4 flex flex-col items-center gap-2 max-w-[280px] mx-auto">
-                        <div className="flex items-center justify-between w-full px-1">
-                          <span className="text-[10px] font-bold text-[#616161] uppercase tracking-wider flex items-center gap-1">
-                            <ZoomIn className="w-3 h-3 text-[#004e9e]" /> Distance Zoom
+                      <div className="mt-3 flex flex-col items-center">
+                        <button
+                          type="button"
+                          onClick={() => setShowZoomControls((prev) => !prev)}
+                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all border shadow-xs ${
+                            showZoomControls || zoomLevel > 1
+                              ? 'bg-[#e6eff8] text-[#004e9e] border-[#bfdbfe]'
+                              : 'bg-white text-[#616161] hover:text-[#222222] border-[#e5e5e5] hover:bg-[#fafafa]'
+                          }`}
+                        >
+                          <ZoomIn className="w-3.5 h-3.5 text-[#004e9e]" />
+                          <span>
+                            {zoomLevel > 1
+                              ? `Zoom: ${zoomLevel.toFixed(1)}x`
+                              : 'Distance Zoom'}
                           </span>
-                          <span className="text-[10px] font-mono font-bold text-[#004e9e] bg-[#e6eff8] px-2 py-0.5 rounded-full border border-[#bfdbfe]">
-                            {zoomLevel.toFixed(1)}x {isHardwareZoom ? '• Camera' : ''}
-                          </span>
-                        </div>
+                          {showZoomControls ? (
+                            <ChevronUp className="w-3 h-3 text-[#004e9e]" />
+                          ) : (
+                            <ChevronDown className="w-3 h-3 text-[#9e9e9e]" />
+                          )}
+                        </button>
 
-                        {/* Quick Preset Buttons */}
-                        <div className="flex items-center gap-1 p-1 bg-[#fafafa] border border-[#e5e5e5] rounded-full shadow-xs w-full justify-between">
-                          {[1, 1.5, 2, 2.5, 3].map((z) => {
-                            const isSelected = Math.abs(zoomLevel - z) < 0.15;
-                            return (
-                              <button
-                                key={z}
-                                type="button"
-                                onClick={() => handleZoomChange(z)}
-                                className={`flex-1 py-1 rounded-full text-xs font-mono font-bold transition-all ${
-                                  isSelected
-                                    ? 'bg-[#004e9e] text-white shadow-xs'
-                                    : 'text-[#616161] hover:text-[#222222] hover:bg-white'
-                                }`}
-                              >
-                                {z}x
-                              </button>
-                            );
-                          })}
-                        </div>
+                        <AnimatePresence>
+                          {showZoomControls && (
+                            <motion.div
+                              initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                              animate={{ opacity: 1, height: 'auto', marginTop: 10 }}
+                              exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                              transition={{ duration: 0.2, ease: 'easeInOut' }}
+                              className="w-full max-w-[280px] overflow-hidden"
+                            >
+                              <div className="flex flex-col items-center gap-2 p-3 bg-white border border-[#e5e5e5] rounded-2xl shadow-xs">
+                                <div className="flex items-center justify-between w-full px-1">
+                                  <span className="text-[10px] font-bold text-[#616161] uppercase tracking-wider flex items-center gap-1">
+                                    <SlidersHorizontal className="w-3 h-3 text-[#004e9e]" /> Adjust Zoom
+                                  </span>
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="text-[10px] font-mono font-bold text-[#004e9e] bg-[#e6eff8] px-2 py-0.5 rounded-full border border-[#bfdbfe]">
+                                      {zoomLevel.toFixed(1)}x {isHardwareZoom ? '• Camera' : ''}
+                                    </span>
+                                    {zoomLevel > 1 && (
+                                      <button
+                                        type="button"
+                                        onClick={() => handleZoomChange(1)}
+                                        className="text-[10px] text-[#9e9e9e] hover:text-[#b91c1c] underline transition-colors"
+                                      >
+                                        Reset
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
 
-                        {/* Fine-tune Slider with - / + */}
-                        <div className="flex items-center gap-2 w-full px-1">
-                          <button
-                            type="button"
-                            onClick={() => handleZoomChange(Math.max(zoomRange.min, zoomLevel - 0.25))}
-                            className="p-1 rounded-full text-[#616161] hover:text-[#004e9e] hover:bg-[#f0f0f0] transition-colors"
-                            title="Zoom out"
-                          >
-                            <ZoomOut className="w-3.5 h-3.5" />
-                          </button>
-                          <input
-                            type="range"
-                            min={zoomRange.min}
-                            max={zoomRange.max}
-                            step={zoomRange.step}
-                            value={zoomLevel}
-                            onChange={(e) => handleZoomChange(parseFloat(e.target.value))}
-                            className="w-full h-1.5 bg-[#e5e5e5] rounded-lg appearance-none cursor-pointer accent-[#004e9e]"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => handleZoomChange(Math.min(zoomRange.max, zoomLevel + 0.25))}
-                            className="p-1 rounded-full text-[#616161] hover:text-[#004e9e] hover:bg-[#f0f0f0] transition-colors"
-                            title="Zoom in"
-                          >
-                            <ZoomIn className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
+                                {/* Quick Preset Buttons */}
+                                <div className="flex items-center gap-1 p-1 bg-[#fafafa] border border-[#e5e5e5] rounded-full shadow-xs w-full justify-between">
+                                  {[1, 1.5, 2, 2.5, 3].map((z) => {
+                                    const isSelected = Math.abs(zoomLevel - z) < 0.15;
+                                    return (
+                                      <button
+                                        key={z}
+                                        type="button"
+                                        onClick={() => handleZoomChange(z)}
+                                        className={`flex-1 py-1 rounded-full text-xs font-mono font-bold transition-all ${
+                                          isSelected
+                                            ? 'bg-[#004e9e] text-white shadow-xs'
+                                            : 'text-[#616161] hover:text-[#222222] hover:bg-white'
+                                        }`}
+                                      >
+                                        {z}x
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+
+                                {/* Fine-tune Slider with - / + */}
+                                <div className="flex items-center gap-2 w-full px-1">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleZoomChange(Math.max(zoomRange.min, zoomLevel - 0.25))}
+                                    className="p-1 rounded-full text-[#616161] hover:text-[#004e9e] hover:bg-[#fafafa] transition-colors"
+                                    title="Zoom out"
+                                  >
+                                    <ZoomOut className="w-3.5 h-3.5" />
+                                  </button>
+                                  <input
+                                    type="range"
+                                    min={zoomRange.min}
+                                    max={zoomRange.max}
+                                    step={zoomRange.step}
+                                    value={zoomLevel}
+                                    onChange={(e) => handleZoomChange(parseFloat(e.target.value))}
+                                    className="w-full h-1.5 bg-[#e5e5e5] rounded-lg appearance-none cursor-pointer accent-[#004e9e]"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => handleZoomChange(Math.min(zoomRange.max, zoomLevel + 0.25))}
+                                    className="p-1 rounded-full text-[#616161] hover:text-[#004e9e] hover:bg-[#fafafa] transition-colors"
+                                    title="Zoom in"
+                                  >
+                                    <ZoomIn className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
                     )}
 
