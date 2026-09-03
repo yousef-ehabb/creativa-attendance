@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Camera, ShieldCheck, KeyRound, ArrowRight, BookOpen, AlertCircle, Loader2, Smartphone, Sparkles } from 'lucide-react';
+import { Camera, ShieldCheck, KeyRound, ArrowRight, BookOpen, AlertCircle, Loader2, Smartphone, Sparkles, ZoomIn, ZoomOut } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -19,7 +19,12 @@ export default function StudentHomePage() {
   const [scanError, setScanError] = useState('');
   const [isScanning, setIsScanning] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [zoomRange, setZoomRange] = useState({ min: 1, max: 3.5, step: 0.25 });
+  const [isHardwareZoom, setIsHardwareZoom] = useState(false);
   const scannerRef = useRef<any>(null);
+  const touchStartDist = useRef<number | null>(null);
+  const touchStartZoom = useRef<number>(1);
 
   useEffect(() => {
     const token = localStorage.getItem('creativa_device_token');
@@ -41,6 +46,64 @@ export default function StudentHomePage() {
     } else {
       router.push(`/checkin?t=${encodeURIComponent(clean)}`);
     }
+  };
+
+  const handleZoomChange = async (newZoom: number) => {
+    const clamped = Math.min(Math.max(newZoom, zoomRange.min), zoomRange.max);
+    const rounded = Math.round(clamped * 10) / 10;
+    setZoomLevel(rounded);
+
+    let hardwareApplied = false;
+    if (scannerRef.current && isHardwareZoom) {
+      try {
+        const capabilities = scannerRef.current.getRunningTrackCameraCapabilities();
+        const zoomFeature = capabilities?.zoomFeature?.();
+        if (zoomFeature && zoomFeature.isSupported()) {
+          await zoomFeature.apply(rounded);
+          hardwareApplied = true;
+        }
+      } catch (e) {
+        console.warn('Hardware zoom failed, falling back to CSS zoom', e);
+      }
+    }
+
+    // Apply digital CSS scale if hardware zoom was not applied
+    const video = document.querySelector('#qr-reader video') as HTMLVideoElement | null;
+    if (video) {
+      if (hardwareApplied) {
+        video.style.transform = 'none';
+      } else {
+        video.style.transform = `scale(${rounded})`;
+        video.style.transformOrigin = 'center center';
+        video.style.transition = 'transform 0.15s ease-out';
+      }
+    }
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      touchStartDist.current = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      touchStartZoom.current = zoomLevel;
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 2 && touchStartDist.current !== null) {
+      const currentDist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      const factor = currentDist / touchStartDist.current;
+      const targetZoom = touchStartZoom.current * factor;
+      handleZoomChange(parseFloat(targetZoom.toFixed(1)));
+    }
+  };
+
+  const handleTouchEnd = () => {
+    touchStartDist.current = null;
   };
 
   useEffect(() => {
@@ -76,6 +139,27 @@ export default function StudentHomePage() {
             .then(() => {
               setIsScanning(true);
               setScanError('');
+              // Detect hardware camera zoom capabilities
+              try {
+                const capabilities = html5QrCode.getRunningTrackCameraCapabilities();
+                const zoomFeature = capabilities?.zoomFeature?.();
+                if (zoomFeature && zoomFeature.isSupported()) {
+                  setIsHardwareZoom(true);
+                  const min = zoomFeature.min() || 1;
+                  const max = zoomFeature.max() || 5;
+                  const step = zoomFeature.step() || 0.1;
+                  setZoomRange({ min, max, step });
+                  setZoomLevel(zoomFeature.value() || 1);
+                } else {
+                  setIsHardwareZoom(false);
+                  setZoomRange({ min: 1, max: 3.5, step: 0.25 });
+                  setZoomLevel(1);
+                }
+              } catch {
+                setIsHardwareZoom(false);
+                setZoomRange({ min: 1, max: 3.5, step: 0.25 });
+                setZoomLevel(1);
+              }
             })
             .catch((err: any) => {
               console.warn('Camera start error:', err);
@@ -92,6 +176,7 @@ export default function StudentHomePage() {
         scannerRef.current.stop().catch(() => {});
         scannerRef.current = null;
       }
+      setZoomLevel(1);
     };
   }, [activeTab, router]);
 
@@ -165,8 +250,21 @@ export default function StudentHomePage() {
 
                   {/* Tab 1: Live QR Scanner with Glow Target */}
                   <TabsContent value="scan" className="m-0 focus-visible:outline-none">
-                    <div className="relative rounded-2xl overflow-hidden bg-[#001733] aspect-square max-w-[280px] mx-auto flex items-center justify-center border-2 border-[#002d5c] shadow-[0_8px_30px_rgba(0,23,51,0.4)]">
-                      <div id="qr-reader" className="w-full h-full" />
+                    <div
+                      onTouchStart={handleTouchStart}
+                      onTouchMove={handleTouchMove}
+                      onTouchEnd={handleTouchEnd}
+                      className="relative rounded-2xl overflow-hidden bg-[#001733] aspect-square max-w-[280px] mx-auto flex items-center justify-center border-2 border-[#002d5c] shadow-[0_8px_30px_rgba(0,23,51,0.4)] touch-none select-none"
+                    >
+                      <div id="qr-reader" className="w-full h-full overflow-hidden flex items-center justify-center" />
+
+                      {/* Floating Zoom Indicator Badge */}
+                      {isScanning && zoomLevel > 1 && (
+                        <div className="absolute top-2.5 right-2.5 z-20 bg-black/70 backdrop-blur-md text-white text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border border-white/20 shadow-md flex items-center gap-1 pointer-events-none">
+                          <ZoomIn className="w-2.5 h-2.5 text-[#f8af43]" />
+                          {zoomLevel.toFixed(1)}x
+                        </div>
+                      )}
 
                       {/* High-Tech Glowing Viewfinder Target */}
                       {isScanning && (
@@ -211,7 +309,71 @@ export default function StudentHomePage() {
                       )}
                     </div>
 
-                    <p className="text-[11px] text-center text-[#9e9e9e] mt-3.5 font-medium">
+                    {/* Camera Zoom Distance Controls */}
+                    {isScanning && (
+                      <div className="mt-4 flex flex-col items-center gap-2 max-w-[280px] mx-auto">
+                        <div className="flex items-center justify-between w-full px-1">
+                          <span className="text-[10px] font-bold text-[#616161] uppercase tracking-wider flex items-center gap-1">
+                            <ZoomIn className="w-3 h-3 text-[#004e9e]" /> Distance Zoom
+                          </span>
+                          <span className="text-[10px] font-mono font-bold text-[#004e9e] bg-[#e6eff8] px-2 py-0.5 rounded-full border border-[#bfdbfe]">
+                            {zoomLevel.toFixed(1)}x {isHardwareZoom ? '• Camera' : ''}
+                          </span>
+                        </div>
+
+                        {/* Quick Preset Buttons */}
+                        <div className="flex items-center gap-1 p-1 bg-[#fafafa] border border-[#e5e5e5] rounded-full shadow-xs w-full justify-between">
+                          {[1, 1.5, 2, 2.5, 3].map((z) => {
+                            const isSelected = Math.abs(zoomLevel - z) < 0.15;
+                            return (
+                              <button
+                                key={z}
+                                type="button"
+                                onClick={() => handleZoomChange(z)}
+                                className={`flex-1 py-1 rounded-full text-xs font-mono font-bold transition-all ${
+                                  isSelected
+                                    ? 'bg-[#004e9e] text-white shadow-xs'
+                                    : 'text-[#616161] hover:text-[#222222] hover:bg-white'
+                                }`}
+                              >
+                                {z}x
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        {/* Fine-tune Slider with - / + */}
+                        <div className="flex items-center gap-2 w-full px-1">
+                          <button
+                            type="button"
+                            onClick={() => handleZoomChange(Math.max(zoomRange.min, zoomLevel - 0.25))}
+                            className="p-1 rounded-full text-[#616161] hover:text-[#004e9e] hover:bg-[#f0f0f0] transition-colors"
+                            title="Zoom out"
+                          >
+                            <ZoomOut className="w-3.5 h-3.5" />
+                          </button>
+                          <input
+                            type="range"
+                            min={zoomRange.min}
+                            max={zoomRange.max}
+                            step={zoomRange.step}
+                            value={zoomLevel}
+                            onChange={(e) => handleZoomChange(parseFloat(e.target.value))}
+                            className="w-full h-1.5 bg-[#e5e5e5] rounded-lg appearance-none cursor-pointer accent-[#004e9e]"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleZoomChange(Math.min(zoomRange.max, zoomLevel + 0.25))}
+                            className="p-1 rounded-full text-[#616161] hover:text-[#004e9e] hover:bg-[#f0f0f0] transition-colors"
+                            title="Zoom in"
+                          >
+                            <ZoomIn className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    <p className="text-[11px] text-center text-[#9e9e9e] mt-3 font-medium">
                       Align the room QR code inside the frame for instant recording
                     </p>
                   </TabsContent>
