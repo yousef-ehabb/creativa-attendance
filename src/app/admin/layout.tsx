@@ -4,6 +4,13 @@ import { AdminNavbar } from '@/components/admin/AdminNavbar';
 export const metadata: Metadata = {
   title: 'Creativa Hub — Coordinator Console',
   description: 'Manage attendance, schedule room sessions, and verify certificate eligibility for Creativa Innovation Hubs',
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/logo.png', type: 'image/png' },
+    ],
+    apple: '/apple-icon.png',
+  },
 };
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

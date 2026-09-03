@@ -12,7 +12,11 @@ export const metadata: Metadata = {
   title: 'Creativa Hub — Digital Attendance & Credential Studio',
   description: 'Attendance tracking, live QR verification, and certificate eligibility management for Creativa Innovation Hubs (MCIT Egypt)',
   icons: {
-    icon: '/logo.png',
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/logo.png', type: 'image/png' },
+    ],
+    apple: '/apple-icon.png',
   },
 };
 
