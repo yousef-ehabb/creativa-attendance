@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { createSupabaseBrowser } from '@/lib/supabase-browser';
+import { createSupabaseBrowser, ensureRealtimeAuth } from '@/lib/supabase-browser';
 import { ArrowLeft, Users, ShieldCheck, Square, Loader2, CheckCircle2, RefreshCw, QrCode, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -47,10 +47,22 @@ export default function LiveSessionPage() {
       const json = await res.json();
       if (json.ok) {
         setSession(json.data.session);
-        setAttendees(json.data.attendees ?? []);
+        setAttendees((prev) => {
+          const incoming: Attendee[] = json.data.attendees ?? [];
+          // Deduplicate by attendance ID while preserving order
+          const seen = new Set<string>();
+          const deduped: Attendee[] = [];
+          for (const item of incoming) {
+            if (!seen.has(item.id)) {
+              seen.add(item.id);
+              deduped.push(item);
+            }
+          }
+          return deduped;
+        });
       }
     } catch (e) {
-      console.error('Attendance fetch error', e);
+      console.error('[LiveSession] Attendance fetch error:', e);
     }
   }, [sessionId]);
 
@@ -72,27 +84,76 @@ export default function LiveSessionPage() {
 
   // Supabase Realtime subscription — refetch from server API on new attendance
   useEffect(() => {
+    let isMounted = true;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
     const supabase = createSupabaseBrowser();
-    const channel = supabase
-      .channel(`session-${sessionId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'att_attendance',
-          filter: `session_id=eq.${sessionId}`,
-        },
-        () => {
-          // Refetch full attendee list from server (includes student names)
-          // This avoids querying att_students directly from the browser client
-          fetchAttendees();
-        }
-      )
-      .subscribe();
+
+    console.log(`[Realtime] Initializing subscription for session: ${sessionId}`);
+
+    const setupRealtime = async () => {
+      try {
+        // Guarantee Realtime websocket has authenticated JWT so RLS on att_attendance permits broadcast
+        await ensureRealtimeAuth(supabase);
+        if (!isMounted) return;
+
+        // Subscribe to attendance changes for the current session
+        channel = supabase
+          .channel(`session-attendance-${sessionId}`)
+          .on(
+            'postgres_changes',
+            {
+              event: 'INSERT',
+              schema: 'public',
+              table: 'att_attendance',
+              filter: `session_id=eq.${sessionId}`,
+            },
+            (payload) => {
+              console.log('[Realtime] Attendance INSERT event received:', payload.new?.id, 'student:', payload.new?.student_id);
+              if (isMounted) {
+                fetchAttendees();
+              }
+            }
+          )
+          .on(
+            'postgres_changes',
+            {
+              event: 'UPDATE',
+              schema: 'public',
+              table: 'att_attendance',
+              filter: `session_id=eq.${sessionId}`,
+            },
+            (payload) => {
+              console.log('[Realtime] Attendance UPDATE event received:', payload.new?.id);
+              if (isMounted) {
+                fetchAttendees();
+              }
+            }
+          )
+          .subscribe((status, err) => {
+            console.log(`[Realtime] Subscription status for session-${sessionId}:`, status, err || '');
+            if (status === 'SUBSCRIBED') {
+              // Close race condition gap: fetch latest attendees immediately once channel is live
+              if (isMounted) {
+                console.log('[Realtime] Channel live. Performing sync catch-up fetch...');
+                fetchAttendees();
+              }
+            } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+              console.error(`[Realtime] Subscription error (${status}):`, err);
+            }
+          });
+      } catch (err) {
+        console.error('[Realtime] Setup error:', err);
+      }
+    };
+
+    setupRealtime();
 
     return () => {
-      supabase.removeChannel(channel);
+      console.log(`[Realtime] Cleaning up subscription for session: ${sessionId}`);
+      isMounted = false;
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
     };
   }, [sessionId, fetchAttendees]);
 
