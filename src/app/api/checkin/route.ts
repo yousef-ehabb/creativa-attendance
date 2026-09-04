@@ -4,17 +4,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { supabaseAdmin } from '@/lib/supabase-admin';
-import { verifyDeviceToken, extractBearerToken, hashDeviceToken } from '@/lib/device-token';
+import { verifyDeviceToken, extractBearerToken, hashDeviceToken, verifyIntentToken } from '@/lib/device-token';
 import { decodeQrPayload, verifyQrPayload } from '@/lib/qr-crypto';
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { qr_token } = body;
+    const { qr_token, intent_token } = body;
     const rawToken = extractBearerToken(req.headers.get('authorization'));
 
     if (!rawToken) return NextResponse.json({ ok: false, error: 'No device token' }, { status: 401 });
-    if (!qr_token) return NextResponse.json({ ok: false, error: 'No QR token' }, { status: 400 });
+    if (!qr_token && !intent_token) {
+      return NextResponse.json({ ok: false, error: 'No QR token or intent token provided' }, { status: 400 });
+    }
 
     // Verify device token
     const studentId = await verifyDeviceToken(rawToken);
@@ -28,21 +30,40 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: false, error: 'Device token revoked' }, { status: 401 });
     }
 
-    // Verify QR payload
-    const payload = decodeQrPayload(qr_token);
-    if (!payload) return NextResponse.json({ ok: false, error: 'Invalid QR code' }, { status: 400 });
+    let sessionId: string;
+
+    if (intent_token) {
+      // Preferred path: intent token survives QR rotation (valid 10 minutes)
+      const sid = await verifyIntentToken(intent_token);
+      if (!sid) {
+        return NextResponse.json({ ok: false, error: 'Check-in intent has expired or is invalid. Please scan the QR code again.' }, { status: 400 });
+      }
+      sessionId = sid;
+    } else {
+      // Legacy / direct QR token path: verify 60s rotating QR payload
+      const payload = decodeQrPayload(qr_token);
+      if (!payload) return NextResponse.json({ ok: false, error: 'Invalid QR code' }, { status: 400 });
+
+      const { data: sessionData } = await supabaseAdmin
+        .from('att_sessions').select('id, status, qr_secret').eq('id', payload.sid).single();
+      if (!sessionData) return NextResponse.json({ ok: false, error: 'Session not found' }, { status: 404 });
+      if (sessionData.status !== 'active') {
+        return NextResponse.json({ ok: false, error: 'This session has ended. Contact your coordinator.' }, { status: 400 });
+      }
+
+      const verify = verifyQrPayload(payload, sessionData.qr_secret);
+      if (!verify.ok) {
+        const msg = verify.reason === 'expired' ? 'QR code has expired. Please scan the current code.' : 'Invalid QR code.';
+        return NextResponse.json({ ok: false, error: msg, code: verify.reason }, { status: 400 });
+      }
+      sessionId = payload.sid;
+    }
 
     const { data: session } = await supabaseAdmin
-      .from('att_sessions').select('id, course_id, status, qr_secret').eq('id', payload.sid).single();
+      .from('att_sessions').select('id, course_id, status').eq('id', sessionId).single();
     if (!session) return NextResponse.json({ ok: false, error: 'Session not found' }, { status: 404 });
     if (session.status !== 'active') {
       return NextResponse.json({ ok: false, error: 'This session has ended. Contact your coordinator.' }, { status: 400 });
-    }
-
-    const verify = verifyQrPayload(payload, session.qr_secret);
-    if (!verify.ok) {
-      const msg = verify.reason === 'expired' ? 'QR code has expired. Please scan the current code.' : 'Invalid QR code.';
-      return NextResponse.json({ ok: false, error: msg, code: verify.reason }, { status: 400 });
     }
 
     // Ensure enrollment exists (auto-enroll on new course)

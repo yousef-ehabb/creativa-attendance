@@ -9,26 +9,55 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
+function getStoredToken(): string | null {
+  try {
+    if (typeof window === 'undefined') return null;
+    return localStorage.getItem('creativa_device_token');
+  } catch {
+    return null;
+  }
+}
+
+function clearStoredTokens() {
+  try {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('creativa_device_token');
+      localStorage.removeItem('creativa_student_id');
+    }
+  } catch {}
+}
+
 function CheckinProcess() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('t') ?? '';
+  const intentToken = searchParams.get('it') ?? '';
   const [status, setStatus] = useState<'checking' | 'success' | 'error' | 'need_register'>('checking');
   const [data, setData] = useState<{ course_name?: string; session_number?: number } | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
+  const [canRetry, setCanRetry] = useState(false);
 
-  useEffect(() => {
-    if (!token) {
-      setErrorMsg('No QR session token provided. Please scan the active room QR code.');
+  const executeCheckin = () => {
+    if (!token && !intentToken) {
+      setErrorMsg('No active attendance session token provided. Please scan the active room QR code.');
       setStatus('error');
+      setCanRetry(false);
       return;
     }
 
-    const deviceToken = localStorage.getItem('creativa_device_token');
+    const deviceToken = getStoredToken();
     if (!deviceToken) {
       setStatus('need_register');
       return;
     }
+
+    setStatus('checking');
+    setErrorMsg('');
+    setCanRetry(false);
+
+    const bodyPayload = intentToken
+      ? { intent_token: intentToken }
+      : { qr_token: token };
 
     fetch('/api/checkin', {
       method: 'POST',
@@ -36,7 +65,7 @@ function CheckinProcess() {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${deviceToken}`,
       },
-      body: JSON.stringify({ qr_token: token }),
+      body: JSON.stringify(bodyPayload),
     })
       .then((res) => res.json())
       .then((json) => {
@@ -48,13 +77,19 @@ function CheckinProcess() {
         } else {
           setErrorMsg(json.error ?? 'Check-in validation failed.');
           setStatus('error');
+          setCanRetry(false);
         }
       })
       .catch(() => {
-        setErrorMsg('Network error. Please check your connection and scan again.');
+        setErrorMsg('Network connection error. Please verify your connection and try again.');
         setStatus('error');
+        setCanRetry(true);
       });
-  }, [token]);
+  };
+
+  useEffect(() => {
+    executeCheckin();
+  }, [token, intentToken]);
 
   return (
     <div className="min-h-[100dvh] subtle-mesh flex flex-col justify-between p-4 sm:p-6 lg:p-8 selection:bg-[#004e9e] selection:text-white">
@@ -172,9 +207,14 @@ function CheckinProcess() {
                       variant="primary"
                       className="w-full h-12 text-sm font-bold mb-3.5 shadow-lg"
                       onClick={() => {
-                        localStorage.removeItem('creativa_device_token');
-                        localStorage.removeItem('creativa_student_id');
-                        router.replace(`/c?t=${encodeURIComponent(token)}`);
+                        clearStoredTokens();
+                        if (intentToken) {
+                          router.replace(`/register?it=${encodeURIComponent(intentToken)}`);
+                        } else if (token) {
+                          router.replace(`/c?t=${encodeURIComponent(token)}`);
+                        } else {
+                          router.replace('/');
+                        }
                       }}
                     >
                       Complete Trainee Profile <ArrowRight className="w-4 h-4" />
@@ -199,13 +239,24 @@ function CheckinProcess() {
                       {errorMsg}
                     </p>
 
-                    <Button
-                      variant="outline"
-                      className="w-full h-12 gap-2 font-bold"
-                      onClick={() => router.push('/')}
-                    >
-                      <RefreshCw className="w-4 h-4" /> Scan QR Code Again
-                    </Button>
+                    <div className="flex flex-col gap-2.5">
+                      {canRetry && (
+                        <Button
+                          variant="primary"
+                          className="w-full h-12 gap-2 font-bold shadow-md"
+                          onClick={executeCheckin}
+                        >
+                          <RefreshCw className="w-4 h-4" /> Retry Check-in
+                        </Button>
+                      )}
+                      <Button
+                        variant={canRetry ? "outline" : "primary"}
+                        className="w-full h-12 gap-2 font-bold shadow-sm"
+                        onClick={() => router.push('/')}
+                      >
+                        <RefreshCw className="w-4 h-4" /> Scan QR Code Again
+                      </Button>
+                    </div>
                   </div>
                 )}
               </CardContent>

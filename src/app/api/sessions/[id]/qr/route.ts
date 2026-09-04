@@ -29,7 +29,13 @@ export async function GET(
 
   const payload = generateQrPayload(session.id, session.qr_secret);
   const encoded = encodeQrPayload(payload);
-  const qrUrl = `${process.env.NEXT_PUBLIC_APP_URL}/c?t=${encoded}`;
+  
+  let baseUrl = (process.env.NEXT_PUBLIC_APP_URL || req.nextUrl.origin).trim();
+  if (!baseUrl.includes('localhost') && !baseUrl.includes('127.0.0.1')) {
+    baseUrl = baseUrl.replace(/^http:\/\//i, 'https://');
+  }
+  baseUrl = baseUrl.replace(/\/+$/, '');
+  const qrUrl = `${baseUrl}/c?t=${encoded}`;
 
   const dataUrl = await QRCode.toDataURL(qrUrl, {
     errorCorrectionLevel: 'M',
