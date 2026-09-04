@@ -34,7 +34,12 @@ function CheckinProcess() {
   const token = searchParams.get('t') ?? '';
   const intentToken = searchParams.get('it') ?? '';
   const [status, setStatus] = useState<'checking' | 'success' | 'error' | 'need_register'>('checking');
-  const [data, setData] = useState<{ course_name?: string; session_number?: number } | null>(null);
+  const [data, setData] = useState<{
+    course_name?: string;
+    session_number?: number;
+    already_checked_in?: boolean;
+    student_name?: string;
+  } | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
   const [canRetry, setCanRetry] = useState(false);
 
@@ -108,8 +113,8 @@ function CheckinProcess() {
           </div>
         </div>
 
-        <Badge variant={status === 'success' ? 'success' : 'blue'}>
-          {status === 'success' ? 'Verified' : 'Processing'}
+        <Badge variant={status === 'success' ? (data?.already_checked_in ? 'blue' : 'success') : 'blue'}>
+          {status === 'success' ? (data?.already_checked_in ? 'Already Recorded' : 'Verified') : 'Processing'}
         </Badge>
       </header>
 
@@ -120,7 +125,9 @@ function CheckinProcess() {
           <div
             className={`absolute -inset-3 sm:-inset-4 rounded-[2.5rem] blur-2xl -z-10 pointer-events-none transition-all duration-500 ${
               status === 'success'
-                ? 'bg-gradient-to-b from-[#10b981]/20 via-[#047857]/10 to-transparent'
+                ? (data?.already_checked_in
+                    ? 'bg-gradient-to-b from-[#004e9e]/20 via-[#3b82f6]/10 to-transparent'
+                    : 'bg-gradient-to-b from-[#10b981]/20 via-[#047857]/10 to-transparent')
                 : status === 'error'
                 ? 'bg-gradient-to-b from-[#ef4444]/20 via-[#b91c1c]/10 to-transparent'
                 : 'bg-gradient-to-b from-[#004e9e]/15 via-[#f8af43]/10 to-transparent'
@@ -152,19 +159,40 @@ function CheckinProcess() {
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-                      className="w-18 h-18 rounded-full bg-[#ecfdf5] text-[#047857] border-2 border-[#a7f3d0] flex items-center justify-center mx-auto mb-4 shadow-[0_0_35px_rgba(16,185,129,0.35)]"
+                      className={`w-18 h-18 rounded-full flex items-center justify-center mx-auto mb-4 ${
+                        data?.already_checked_in
+                          ? 'bg-[#e6eff8] text-[#004e9e] border-2 border-[#bfdbfe] shadow-[0_0_35px_rgba(0,78,158,0.25)]'
+                          : 'bg-[#ecfdf5] text-[#047857] border-2 border-[#a7f3d0] shadow-[0_0_35px_rgba(16,185,129,0.35)]'
+                      }`}
                     >
                       <CheckCircle2 className="w-10 h-10" />
                     </motion.div>
-                    <Badge variant="success" className="mb-2.5">
-                      <Sparkles className="w-3 h-3 text-[#10b981]" /> Attendance Recorded
-                    </Badge>
+
+                    {data?.already_checked_in ? (
+                      <Badge variant="blue" className="mb-2.5">
+                        <CheckCircle2 className="w-3 h-3 text-[#004e9e]" /> Already Checked In
+                      </Badge>
+                    ) : (
+                      <Badge variant="success" className="mb-2.5">
+                        <Sparkles className="w-3 h-3 text-[#10b981]" /> Attendance Recorded
+                      </Badge>
+                    )}
+
                     <h1 className="text-2xl sm:text-3xl font-extrabold text-[#222222] tracking-tight mb-1.5">
-                      You Are Checked In!
+                      {data?.already_checked_in ? "You're Already Checked In!" : 'You Are Checked In!'}
                     </h1>
                     <p className="text-xs text-[#616161] mb-6 leading-relaxed">
-                      Your presence for today&apos;s session has been successfully recorded.
+                      {data?.already_checked_in
+                        ? "Your attendance for this session was already recorded earlier. You're all set!"
+                        : "Your presence for today's session has been successfully recorded."}
                     </p>
+
+                    {data?.already_checked_in && (
+                      <div className="p-3 rounded-xl bg-[#e6eff8]/70 border border-[#bfdbfe]/70 mb-5 text-xs text-[#004e9e] font-medium flex items-center justify-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-[#004e9e] shrink-0" />
+                        <span>Duplicate scan recognized — your attendance is safe.</span>
+                      </div>
+                    )}
 
                     {data?.course_name && (
                       <div className="p-4 sm:p-5 rounded-2xl bg-[#fafafa] border border-[#e5e5e5] mb-6 text-left space-y-2.5 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.03)]">
