@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { createSupabaseServer } from '@/lib/supabase-server';
 import { generateQrPayload, encodeQrPayload } from '@/lib/qr-crypto';
+import { buildQrCheckinUrl } from '@/lib/app-url';
 import QRCode from 'qrcode';
 
 export async function GET(
@@ -30,12 +31,7 @@ export async function GET(
   const payload = generateQrPayload(session.id, session.qr_secret);
   const encoded = encodeQrPayload(payload);
   
-  let baseUrl = (process.env.NEXT_PUBLIC_APP_URL || req.nextUrl.origin).trim();
-  if (!baseUrl.includes('localhost') && !baseUrl.includes('127.0.0.1')) {
-    baseUrl = baseUrl.replace(/^http:\/\//i, 'https://');
-  }
-  baseUrl = baseUrl.replace(/\/+$/, '');
-  const qrUrl = `${baseUrl}/c?t=${encoded}`;
+  const qrUrl = buildQrCheckinUrl(encoded, req);
 
   const dataUrl = await QRCode.toDataURL(qrUrl, {
     errorCorrectionLevel: 'M',
