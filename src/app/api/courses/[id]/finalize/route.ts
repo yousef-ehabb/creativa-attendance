@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { createSupabaseServer } from '@/lib/supabase-server';
 
@@ -21,6 +22,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   await supabaseAdmin.from('att_sessions').update({ status: 'closed', qr_secret: null }).eq('course_id', id).in('status', ['scheduled', 'active']);
   await supabaseAdmin.from('att_courses').update({ status: 'finalized', finalized_at: new Date().toISOString() }).eq('id', id);
+
+  revalidatePath('/admin');
+  revalidatePath('/admin/courses');
+  revalidatePath(`/admin/courses/${id}`);
 
   return NextResponse.json({ ok: true });
 }

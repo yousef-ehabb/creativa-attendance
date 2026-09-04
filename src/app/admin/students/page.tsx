@@ -4,8 +4,10 @@ import Image from 'next/image';
 import { ArrowLeft } from 'lucide-react';
 import { StudentsDirectoryTable } from './StudentsDirectoryTable';
 
+export const dynamic = 'force-dynamic';
+
 export default async function AdminStudentsPage() {
-  const { data: students } = await supabaseAdmin
+  const { data: students, error: studentsError } = await supabaseAdmin
     .from('att_students')
     .select(`
       id,
@@ -27,6 +29,10 @@ export default async function AdminStudentsPage() {
       )
     `)
     .order('created_at', { ascending: false });
+
+  if (studentsError) {
+    console.error('[AdminStudents] Error fetching students:', studentsError);
+  }
 
   const list = (students ?? []).map((s: any) => ({
     ...s,

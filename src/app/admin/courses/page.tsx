@@ -6,8 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 
+export const dynamic = 'force-dynamic';
+
 export default async function AdminCoursesPage() {
-  const { data: courses } = await supabaseAdmin
+  const { data: courses, error: coursesError } = await supabaseAdmin
     .from('att_courses')
     .select(`
       id,
@@ -19,6 +21,10 @@ export default async function AdminCoursesPage() {
       att_enrollments (id)
     `)
     .order('created_at', { ascending: false });
+
+  if (coursesError) {
+    console.error('[AdminCourses] Error fetching courses:', coursesError);
+  }
 
   const list = courses ?? [];
 

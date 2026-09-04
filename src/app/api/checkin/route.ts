@@ -2,6 +2,7 @@
 // Called when a returning student scans a QR code
 // Requires valid device token + valid QR payload
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { verifyDeviceToken, extractBearerToken, hashDeviceToken } from '@/lib/device-token';
 import { decodeQrPayload, verifyQrPayload } from '@/lib/qr-crypto';
@@ -76,6 +77,8 @@ export async function POST(req: NextRequest) {
       .eq('course_id', session.course_id).eq('status', 'closed');
     const { data: sessionInfo } = await supabaseAdmin
       .from('att_sessions').select('session_number').eq('id', session.id).single();
+
+    revalidatePath('/admin');
 
     return NextResponse.json({
       ok: true,

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { createSupabaseServer } from '@/lib/supabase-server';
 
@@ -16,5 +17,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   }).eq('id', id).in('status', ['active', 'scheduled']);
 
   if (error) return NextResponse.json({ ok: false, error: error.message }, { status: 400 });
+
+  revalidatePath('/admin');
+  revalidatePath('/admin/courses');
+
   return NextResponse.json({ ok: true });
 }

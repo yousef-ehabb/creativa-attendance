@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { createSupabaseServer } from '@/lib/supabase-server';
 
@@ -20,5 +21,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const body = await req.json();
   const { error } = await supabaseAdmin.from('att_courses').update(body).eq('id', id);
   if (error) return NextResponse.json({ ok: false, error: error.message }, { status: 400 });
+
+  revalidatePath('/admin');
+  revalidatePath('/admin/courses');
+  revalidatePath(`/admin/courses/${id}`);
+
   return NextResponse.json({ ok: true });
 }

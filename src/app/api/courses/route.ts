@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { createSupabaseServer } from '@/lib/supabase-server';
 
@@ -24,5 +25,9 @@ export async function POST(req: NextRequest) {
     min_attendance_pct: min_attendance_pct ?? 85, start_date, end_date, month_year, status: 'draft'
   }).select().single();
   if (error) return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+
+  revalidatePath('/admin');
+  revalidatePath('/admin/courses');
+
   return NextResponse.json({ ok: true, data }, { status: 201 });
 }

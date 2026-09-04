@@ -6,8 +6,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
+export const dynamic = 'force-dynamic';
+
 export default async function AdminDashboardPage() {
-  const { data: courses } = await supabaseAdmin
+  const { data: courses, error: coursesError } = await supabaseAdmin
     .from('att_courses')
     .select(`
       id,
@@ -20,16 +22,28 @@ export default async function AdminDashboardPage() {
     `)
     .order('created_at', { ascending: false });
 
-  const { count: totalStudents } = await supabaseAdmin
+  if (coursesError) {
+    console.error('[AdminDashboard] Error fetching courses:', coursesError);
+  }
+
+  const { count: totalStudents, error: studentsError } = await supabaseAdmin
     .from('att_students')
     .select('id', { count: 'exact', head: true });
 
-  const { count: totalAttendance } = await supabaseAdmin
+  if (studentsError) {
+    console.error('[AdminDashboard] Error fetching students count:', studentsError);
+  }
+
+  const { count: totalAttendance, error: attendanceError } = await supabaseAdmin
     .from('att_attendance')
     .select('id', { count: 'exact', head: true });
 
+  if (attendanceError) {
+    console.error('[AdminDashboard] Error fetching attendance count:', attendanceError);
+  }
+
   const list = courses ?? [];
-  const activeCourses = list.filter((c) => c.status === 'active');
+  const activeCourses = list.filter((c) => c.status !== 'finalized');
   const finalizedCourses = list.filter((c) => c.status === 'finalized');
 
   return (
